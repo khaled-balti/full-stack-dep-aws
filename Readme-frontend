@@ -1,0 +1,136 @@
+test
+# Frontend Readme
+
+## AWS Resource Configuration Steps
+
+1. **Create a Custom VPC**: Set up a Virtual Private Cloud to isolate your resources.
+2. **Enable Public Subnet Auto-Assign IP**: Ensure public subnet instances get public IPs automatically.
+3. **Launch EC2 Instance in Public Subnet**: Deploy an EC2 instance to host the frontend.
+4. **Assign Elastic IP Address**: Ensure the public EC2 instance has a static public IP.
+5. **Set Route53 Hosted Zone**: Configure DNS for your domain.
+6. **Configure CNAME and A Records**: Map subdomain and domain to the public IP.
+
+## Commands and Utilities
+
+### Public EC2 Instance Setup
+1. **Connect to Public EC2 Instance**:
+    ```bash
+    ssh -i ~/.ssh/key-react-node-app.pem ec2-user@<public-ip>
+    ```
+2. **Install Git**:
+    ```bash
+    sudo yum install git -y
+    ```
+    *Utility*: Git is used for version control and cloning repositories.
+3. **Clone Repository**:
+    ```bash
+    git clone https://github.com/Learn-It-Right-Way/lirw-react-node-mysql-app.git
+    ```
+4. **Install Node.js**:
+    ```bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    source ~/.bashrc
+    nvm install --lts
+    ```
+    *Utility*: Node.js is required to run and build the React application.
+5. **Install Frontend Dependencies**:
+    ```bash
+    cd lirw-react-node-mysql-app/frontend
+    npm install
+    ```
+6. **Set Environment Variables**:
+    ```bash
+    sudo vi .env
+    ```
+7. **Build Frontend for Production**:
+    ```bash
+    npm run build
+    ```
+8. **Install Nginx**:
+    ```bash
+    sudo dnf install nginx
+    sudo systemctl start nginx
+    ```
+    *Utility*: Nginx serves the React files and acts as a reverse proxy.
+9. **Deploy Frontend**:
+    ```bash
+    sudo cp -r dist /usr/share/nginx/html/
+    sudo vi /etc/nginx/nginx.conf
+    sudo systemctl restart nginx
+    ```
+10. **Install SSL Certificate**:
+     ```bash
+     sudo certbot --nginx
+     sudo systemctl restart nginx
+     ```
+     *Utility*: Certbot ensures secure HTTPS access.
+
+---
+
+# Backend Readme
+
+## AWS Resource Configuration Steps
+
+1. **Launch EC2 Instance in Private Subnet**: Deploy an EC2 instance for the backend.
+2. **Configure Security Groups**: Allow access from the public EC2 instance.
+3. **Install MySQL on Private Subnet**: Set up the database server.
+
+## Commands and Utilities
+
+### Private EC2 Instance Setup
+1. **Connect to Private EC2 Instance**:
+    ```bash
+    ssh -i key-react-node-app.pem ec2-user@<private-ip>
+    ```
+2. **Install Git**:
+    ```bash
+    sudo yum install git -y
+    ```
+3. **Clone Repository**:
+    ```bash
+    git clone https://github.com/Learn-It-Right-Way/lirw-react-node-mysql-app.git
+    ```
+4. **Install Node.js**:
+    ```bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    source ~/.bashrc
+    nvm install --lts
+    ```
+5. **Install Backend Dependencies**:
+    ```bash
+    cd lirw-react-node-mysql-app/backend
+    npm install
+    ```
+6. **Configure Database**:
+    ```bash
+    sudo vi configs/db.js
+    ```
+7. **Install MySQL**:
+    ```bash
+    sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
+    sudo dnf install -y mysql80-community-release-el9-1.noarch.rpm
+    sudo dnf install -y mysql-community-server
+    sudo systemctl start mysqld
+    ```
+    *Utility*: MySQL is the database server for the backend.
+8. **Set Up MySQL**:
+    ```bash
+    sudo grep 'temporary password' /var/log/mysqld.log
+    sudo mysql -u root -p
+    ```
+    - Change root password:
+      ```sql
+      ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'learnIT01#';
+      ```
+    - Create application user:
+      ```sql
+      CREATE USER 'appuser'@'localhost' IDENTIFIED WITH mysql_native_password BY 'learnIT02#';
+      GRANT ALL PRIVILEGES ON react_node_app.* TO 'appuser'@'localhost';
+      ```
+9. **Install PM2**:
+    ```bash
+    npm install -g pm2
+    pm2 start server.js
+    pm2 logs
+    ```
+    *Utility*: PM2 is a process manager for running Node.js applications in production.
